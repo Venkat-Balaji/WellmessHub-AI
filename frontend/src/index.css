@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+:root {
+  --accent-color: #14b8a6;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+html.dark {
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
