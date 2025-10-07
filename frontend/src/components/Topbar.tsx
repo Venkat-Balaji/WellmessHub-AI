@@ -1,95 +1,85 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Sun, Moon, User, Settings, LogIn, LogOut } from "lucide-react";
+import { Moon, Sun, User, Settings, LogOut } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 
-const Topbar: React.FC = () => {
-  const { theme, toggleTheme, accent } = useTheme();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Change to your auth logic
+const Topbar = () => {
+  const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   return (
-    <header className="flex items-center justify-between px-6 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-      {/* Left Side - Placeholder or Title */}
-      <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-        Dashboard
-      </h1>
-
-      {/* Right Side - Actions */}
-      <div className="flex items-center space-x-4 relative">
-        {/* Theme Toggle */}
+    <header className="flex justify-end items-center bg-white dark:bg-gray-800 px-6 py-3 shadow-md transition-all duration-300">
+        {/* Greeting */}
+<span className="text-gray-700 dark:text-gray-300 font-medium">
+  Hello, {user?.name?.split(" ")[0] || "Guest"} 👋
+</span>
+      {/* Right side controls */}
+      <div className="relative flex items-center gap-4">
+        {/* Dark/Light Mode Toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:opacity-80 transition"
-          title="Toggle theme"
+          className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+          title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
         >
-          {theme === "light" ? (
-            <Moon className="w-5 h-5" />
-          ) : (
-            <Sun className="w-5 h-5" />
-          )}
+          {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
         </button>
 
-        {/* Profile / Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setDropdownOpen((prev) => !prev)}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-[var(--accent-color)] text-white font-semibold hover:opacity-90 transition"
-            title="Profile"
-          >
-            <User className="w-5 h-5" />
-          </button>
+      
 
-          {/* Dropdown */}
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-50 animate-fadeIn">
-              <button
-                onClick={() => {
-                  navigate("/profile");
-                  setDropdownOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-              >
-                <User className="w-4 h-4 mr-2 text-[var(--accent-color)]" /> Profile
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/settings");
-                  setDropdownOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-              >
-                <Settings className="w-4 h-4 mr-2 text-[var(--accent-color)]" /> Settings
-              </button>
-              <hr className="border-gray-200 dark:border-gray-700" />
-              {isLoggedIn ? (
-                <button
-                  onClick={() => {
-                    setIsLoggedIn(false);
-                    alert("✅ Logged out");
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                >
-                  <LogOut className="w-4 h-4 mr-2" /> Logout
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setIsLoggedIn(true);
-                    navigate("/login");
-                    alert("✅ Logged in");
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                >
-                  <LogIn className="w-4 h-4 mr-2" /> Login
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+{/* Avatar */}
+<button
+  onClick={() => setMenuOpen(!menuOpen)}
+  className="h-9 w-9 flex items-center justify-center rounded-full bg-teal-600 text-white font-bold hover:bg-teal-500 transition overflow-hidden"
+  title="Profile Menu"
+>
+  {user?.profilePic ? (
+    <img src={user.profilePic} alt="avatar" className="h-full w-full object-cover" />
+  ) : (
+    user?.name?.[0]?.toUpperCase() || "U"
+  )}
+</button>
+
+
+        {/* Dropdown Menu */}
+        {menuOpen && (
+          <div
+            className="absolute right-0 top-12 w-44 bg-white dark:bg-gray-700 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-600 z-50 animate-fadeIn"
+            onMouseLeave={() => setMenuOpen(false)}
+          >
+            <button
+              onClick={() => {
+                navigate("/profile");
+                setMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+            >
+              <User size={16} /> Profile
+            </button>
+
+            <button
+              onClick={() => {
+                navigate("/settings");
+                setMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+            >
+              <Settings size={16} /> Settings
+            </button>
+
+            <button
+              onClick={() => {
+                logout();
+                setMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+            >
+              <LogOut size={16} /> Logout
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

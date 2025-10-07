@@ -1,32 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isAuthenticated) navigate("/dashboard");
+  }, [isAuthenticated]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Temporary mock login for now
-    setTimeout(() => {
-      if (email === "admin@demo.com" && password === "123456") {
-        alert("✅ Login Successful!");
-      } else {
-        setError("Invalid email or password");
-      }
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        email,
+        password,
+      });
+
+      // Save token and user to AuthContext
+      login(res.data);
+
+      navigate("/dashboard");
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message || "Invalid email or password";
+      setError(msg);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-700 to-teal-900">
       <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-white tracking-tight">WellnessHub</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            WellnessHub
+          </h1>
           <p className="text-gray-300 mt-2 text-sm">Sign in to continue</p>
         </div>
 
@@ -55,7 +74,9 @@ const Login = () => {
             />
           </div>
 
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          {error && (
+            <p className="text-red-400 text-sm text-center">{error}</p>
+          )}
 
           <button
             type="submit"
