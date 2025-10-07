@@ -1,15 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import {
   HomeIcon,
   UsersIcon,
   FileTextIcon,
-  SettingsIcon,
-  BellIcon,
-  CalendarIcon,
   BarChartIcon,
+  CalendarIcon,
   MessageSquareIcon,
+  BellIcon,
   HistoryIcon,
 } from "lucide-react";
 
@@ -22,47 +21,79 @@ const navItems = [
   { to: "/forums", label: "Forums", icon: MessageSquareIcon },
   { to: "/notifications", label: "Notifications", icon: BellIcon },
   { to: "/history", label: "History", icon: HistoryIcon },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 const Sidebar: React.FC = () => {
-  const { siteName, logo } = useTheme();
+  const { siteName, logo, accent } = useTheme();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700 flex flex-col">
-      <div className="p-5 text-center border-b border-gray-200 dark:border-gray-700">
+    <aside
+      onMouseEnter={() => setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
+      className={`${
+        isExpanded ? "w-64" : "w-20"
+      } bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl h-screen flex flex-col transition-all duration-300 ease-in-out overflow-hidden`}
+    >
+      {/* Logo / Title */}
+      <div className="flex items-center justify-center p-4 border-b border-gray-200 dark:border-gray-700">
         {logo ? (
           <img
             src={logo}
             alt="Logo"
-            className="h-12 mx-auto object-contain rounded"
+            className={`${
+              isExpanded ? "h-10 w-auto" : "h-8 w-8"
+            } object-contain transition-all duration-300`}
           />
         ) : (
-          <span className="text-2xl font-bold text-[var(--accent-color)]">
-            {siteName}
+          <span
+            className={`font-bold text-[var(--accent-color)] transition-all duration-300 ${
+              isExpanded ? "text-xl" : "text-lg"
+            }`}
+          >
+            {isExpanded ? siteName : siteName.charAt(0)}
           </span>
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto">
+      {/* Nav Links */}
+      <nav className="flex-1 mt-4">
         {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             end
             className={({ isActive }) =>
-              `flex items-center px-5 py-3 text-sm font-medium transition-colors ${
+              `group flex items-center gap-4 px-4 py-3 rounded-lg mx-2 my-1 transition-all duration-300 ${
                 isActive
                   ? "bg-[var(--accent-color)]/10 text-[var(--accent-color)]"
                   : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`
             }
           >
-            <Icon className="w-5 h-5 mr-3" />
-            {label}
+            <Icon
+              className={`w-5 h-5 flex-shrink-0 transition-all duration-300 ${
+                isExpanded ? "" : "mx-auto"
+              }`}
+            />
+            <span
+              className={`whitespace-nowrap overflow-hidden transition-all duration-200 ${
+                isExpanded
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-0 -translate-x-5"
+              }`}
+            >
+              {label}
+            </span>
           </NavLink>
         ))}
       </nav>
+
+      {/* Footer Accent Bar */}
+      <div
+        className="mt-auto h-1 rounded-t-lg transition-all duration-300"
+        style={{ backgroundColor: accent }}
+      ></div>
     </aside>
   );
 };

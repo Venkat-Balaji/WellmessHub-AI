@@ -12,6 +12,8 @@ import Settings from "./pages/Settings";
 import History from "./pages/History";
 import Analytics from "./pages/Analytics";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import Profile from "./pages/Profile";
+
 
 export default function App() {
   return (
@@ -33,6 +35,8 @@ export default function App() {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/history" element={<History />} />
                 <Route path="/analytics" element={<Analytics />} />
+                <Route path="/profile" element={<Profile />} />
+
               </Routes>
             </main>
           </div>
