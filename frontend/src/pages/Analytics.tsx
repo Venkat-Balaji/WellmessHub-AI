@@ -1,4 +1,13 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
+import React from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
 const data = [
   { month: "Jan", value: 40 },
@@ -8,10 +17,12 @@ const data = [
   { month: "May", value: 120 },
 ];
 
-export default function Analytics() {
+const Analytics: React.FC = () => {
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Analytics</h1>
+      <h1 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
+        Analytics
+      </h1>
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow">
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
@@ -19,10 +30,12 @@ export default function Analytics() {
             <XAxis dataKey="month" />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="value" fill="#14b8a6" />
+            <Bar dataKey="value" fill="var(--accent-color)" />
           </BarChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
-}
+};
+
+export default Analytics;

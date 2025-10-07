@@ -3,29 +3,27 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
-import clientRoutes from "./routes/clientRoutes";
-// import reportRoutes from "./routes/reportRoutes";
-// import programRoutes from "./routes/programRoutes";
-import appointmentRoutes from "./routes/appointmentRoutes";
+import profileRoutes from "./routes/profileRoutes";
+
 
 dotenv.config();
 connectDB();
 
 const app = express();
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json()); // 👈 REQUIRED to parse JSON body
+app.use(express.urlencoded({ extended: true })); // 👈 handles form data
 
-// 🧠 Base route (for health check)
 app.get("/", (req, res) => {
-  res.send("✅ WellnessHub Backend is running...");
+  res.send("✅ WellnessHub API is running...");
 });
 
-// ✅ Mount routers (make sure all are valid)
 app.use("/api/auth", authRoutes);
-app.use("/api/clients", clientRoutes);
-// app.use("/api/reports", reportRoutes);
-// app.use("/api/programs", programRoutes);
-app.use("/api/appointments", appointmentRoutes);
+app.use("/api/profile", profileRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
 export default app;
