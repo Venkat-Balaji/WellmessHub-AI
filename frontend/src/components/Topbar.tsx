@@ -11,12 +11,16 @@ const Topbar = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="flex justify-end items-center bg-white dark:bg-gray-800 px-6 py-3 shadow-md transition-all duration-300">
-        {/* Greeting */}
-<span className="text-gray-700 dark:text-gray-300 font-medium">
-  Hello, {user?.name?.split(" ")[0] || "Guest"} 👋
-</span>
-      {/* Right side controls */}
+    <header className="flex justify-between items-center bg-white dark:bg-gray-800 px-6 py-3 shadow-md transition-all duration-300">
+      
+      {/* --- LEFT SIDE: Greeting --- */}
+      <div>
+        <span className="text-gray-700 dark:text-gray-300 font-medium text-lg">
+          Welcome back, {user?.name?.split(" ")[0] || "Guest"}!
+        </span>
+      </div>
+
+      {/* --- RIGHT SIDE: Controls --- */}
       <div className="relative flex items-center gap-4">
         {/* Dark/Light Mode Toggle */}
         <button
@@ -27,21 +31,22 @@ const Topbar = () => {
           {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
         </button>
 
-      
-
-{/* Avatar */}
-<button
-  onClick={() => setMenuOpen(!menuOpen)}
-  className="h-9 w-9 flex items-center justify-center rounded-full bg-teal-600 text-white font-bold hover:bg-teal-500 transition overflow-hidden"
-  title="Profile Menu"
->
-  {user?.profilePic ? (
-    <img src={user.profilePic} alt="avatar" className="h-full w-full object-cover" />
-  ) : (
-    user?.name?.[0]?.toUpperCase() || "U"
-  )}
-</button>
-
+        {/* Avatar / Profile */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="h-9 w-9 flex items-center justify-center rounded-full bg-teal-600 text-white font-bold hover:bg-teal-500 transition overflow-hidden"
+          title="Profile Menu"
+        >
+          {user?.profilePic ? (
+            <img
+              src={user.profilePic}
+              alt="avatar"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            user?.name?.[0]?.toUpperCase() || "U"
+          )}
+        </button>
 
         {/* Dropdown Menu */}
         {menuOpen && (

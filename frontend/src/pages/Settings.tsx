@@ -1,182 +1,142 @@
-import React from "react";
-import { useTheme } from "../contexts/ThemeContext";
+import React, { useEffect, useState } from "react";
+import API from "../api/axios";
+
+interface Settings {
+  theme: "light" | "dark";
+  color: string;
+  siteName: string;
+  logoUrl?: string;
+}
 
 const presetColors = [
-  "#14b8a6", // teal
-  "#3b82f6", // blue
-  "#8b5cf6", // purple
-  "#ef4444", // red
-  "#f59e0b", // amber
-  "#10b981", // green
+  "#14b8a6", "#3b82f6", "#8b5cf6", "#ef4444", "#f59e0b", "#10b981",
 ];
 
-const Settings: React.FC = () => {
-  const { theme, toggleTheme, accent, setAccent, siteName, setSiteName, logo, setLogo } = useTheme();
+export default function Settings() {
+  const [settings, setSettings] = useState<Settings>({
+    theme: "light",
+    color: "#14b8a6",
+    siteName: "WellnessHub",
+    logoUrl: "",
+  });
+  const [loading, setLoading] = useState(false);
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        setLogo(dataUrl);
-        localStorage.setItem("siteLogo", dataUrl);
-      };
-      reader.readAsDataURL(file);
+  // ✅ Load settings from backend
+  useEffect(() => {
+    API.get("/settings", { withCredentials: true })
+      .then((res) => setSettings(res.data))
+      .catch((err) => console.error("Error loading settings:", err));
+  }, []);
+
+  // ✅ Save settings
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      const res = await API.put("/settings", settings, { withCredentials: true });
+      setSettings(res.data);
+      alert("✅ Settings saved successfully!");
+    } catch (err: any) {
+      console.error("Error saving settings:", err.response?.data || err.message);
+      alert("❌ Failed to update settings.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRemoveLogo = () => {
-    setLogo(null);
-    localStorage.removeItem("siteLogo");
-  };
-
-  const handleCustomColor = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const color = e.target.value;
-    setAccent(color);
-    localStorage.setItem("accent", color);
+  // ✅ Handle logo upload
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setSettings({ ...settings, logoUrl: reader.result as string });
+    reader.readAsDataURL(file);
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-semibold text-gray-800 dark:text-gray-100">
-        Settings
-      </h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-700 to-teal-900">
+      <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-xl p-8 w-full max-w-xl">
+        <h1 className="text-3xl font-bold text-white text-center mb-6">Settings</h1>
 
-      {/* Theme Mode */}
-      <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
-          Appearance
-        </h2>
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 dark:text-gray-300">Theme:</span>
+        {/* Theme Toggle */}
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-gray-300 text-sm font-medium">Theme Mode:</span>
           <button
-            onClick={toggleTheme}
-            className="bg-[var(--accent-color)] hover:opacity-90 text-white px-4 py-2 rounded-lg font-medium transition"
+            onClick={() =>
+              setSettings({ ...settings, theme: settings.theme === "light" ? "dark" : "light" })
+            }
+            className="px-4 py-2 rounded-lg bg-teal-500 hover:bg-teal-400 text-white transition"
           >
-            Switch to {theme === "light" ? "Dark" : "Light"}
+            Switch to {settings.theme === "light" ? "Dark" : "Light"}
           </button>
         </div>
-      </section>
 
-      {/* Accent Color */}
-      <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
-          Accent Color
-        </h2>
+        {/* Accent Colors */}
+        <div className="mb-6">
+          <span className="text-gray-300 text-sm font-medium mb-2 block">Accent Color</span>
+          <div className="flex space-x-3">
+            {presetColors.map((c) => (
+              <button
+                key={c}
+                onClick={() => setSettings({ ...settings, color: c })}
+                className={`w-8 h-8 rounded-full border-2 ${
+                  settings.color === c ? "border-white scale-110" : "border-transparent"
+                } transition-transform`}
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
 
-        {/* Preset Colors */}
-        <div className="flex flex-wrap gap-3">
-          {presetColors.map((color) => (
-            <button
-              key={color}
-              className={`w-10 h-10 rounded-full border-2 ${
-                color === accent
-                  ? "border-gray-900 dark:border-white scale-110"
-                  : "border-transparent"
-              } transition-all duration-300`}
-              style={{ backgroundColor: color }}
-              onClick={() => setAccent(color)}
-            />
-          ))}
-
-          {/* Custom Color Picker */}
-          <label
-            htmlFor="customColor"
-            className="cursor-pointer relative w-10 h-10 rounded-full border border-gray-400 dark:border-gray-600 flex items-center justify-center hover:opacity-80 transition-all"
-          >
-            🎨
+          {/* Custom color picker */}
+          <div className="mt-3">
             <input
-              id="customColor"
               type="color"
-              onChange={handleCustomColor}
-              value={accent}
-              className="absolute inset-0 opacity-0 cursor-pointer"
+              value={settings.color}
+              onChange={(e) => setSettings({ ...settings, color: e.target.value })}
+              className="w-12 h-8 rounded-md border border-gray-300 cursor-pointer"
             />
-          </label>
+          </div>
         </div>
 
-        {/* Live Accent Preview Bar */}
-        <div className="mt-5 h-2 rounded-full w-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width: "100%",
-              backgroundColor: accent,
-              transition: "background-color 0.3s ease",
-            }}
-          />
-        </div>
-
-        <p className="text-sm text-gray-500 mt-3">
-          Selected: <span style={{ color: accent }}>{accent}</span>
-        </p>
-      </section>
-
-      {/* Site Info */}
-      <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-          Site Information
-        </h2>
-
-        <div>
-          <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">
-            Site Name
-          </label>
+        {/* Site Name */}
+        <div className="mb-6">
+          <label className="block text-sm text-gray-300 mb-1">Site Name</label>
           <input
             type="text"
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-[var(--accent-color)] outline-none"
-            value={siteName}
-            onChange={(e) => setSiteName(e.target.value)}
+            value={settings.siteName}
+            onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+            className="w-full px-4 py-2 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-400 outline-none"
           />
         </div>
 
-        <div>
-          <label className="block text-sm text-gray-600 dark:text-gray-300 mb-2">
-            Upload Logo
-          </label>
+        {/* Logo Upload */}
+        <div className="mb-6">
+          <label className="block text-sm text-gray-300 mb-2">Upload Logo</label>
           <input
             type="file"
             accept="image/*"
             onChange={handleLogoUpload}
-            className="block w-full text-sm text-gray-600 dark:text-gray-300"
+            className="text-gray-300 text-sm"
           />
-
-          {logo && (
-            <div className="mt-4 flex flex-col items-start space-y-3">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Logo Preview:</p>
-                <img
-                  src={logo}
-                  alt="Logo Preview"
-                  className="h-16 w-auto rounded-lg shadow border border-gray-200 dark:border-gray-700"
-                />
-              </div>
-
-              {/* 🧹 Remove Logo Button */}
-              <button
-                onClick={() => handleRemoveLogo()}
-                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition-all duration-200"
-              >
-                Remove Logo
-              </button>
+          {settings.logoUrl && (
+            <div className="mt-4 flex justify-center">
+              <img
+                src={settings.logoUrl}
+                alt="Logo Preview"
+                className="h-16 w-auto rounded-lg border border-white/20 shadow"
+              />
             </div>
           )}
         </div>
-      </section>
 
-      <div className="flex justify-end">
+        {/* Save Button */}
         <button
-          onClick={() =>
-            alert(`✅ Saved: ${siteName} | ${accent} | ${theme} mode`)
-          }
-          className="bg-[var(--accent-color)] hover:opacity-90 text-white font-medium px-6 py-2 rounded-lg shadow transition"
+          onClick={handleSave}
+          disabled={loading}
+          className="w-full py-2 mt-2 bg-teal-500 hover:bg-teal-400 text-white rounded-lg font-medium transition disabled:opacity-50"
         >
-          Save Settings
+          {loading ? "Saving..." : "Save Settings"}
         </button>
       </div>
     </div>
   );
-};
-
-export default Settings;
+}

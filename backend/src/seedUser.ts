@@ -1,41 +1,35 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import User from "./models/User";
+import User from "./models/User"; // ✅ make sure your User model path is correct
 
 dotenv.config();
 
 const seedUser = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI as string);
+    await mongoose.connect(process.env.MONGO_URI!);
     console.log("✅ Connected to MongoDB");
-
-    const email = "demo@wellnesshub.com";
-
-    // Delete existing user with same email (to avoid duplicates)
-    await User.deleteOne({ email });
 
     const hashedPassword = await bcrypt.hash("password123", 10);
 
-    const newUser = await User.create({
+    const user = new User({
       name: "Demo User",
-      email,
+      email: "demo@wellnesshub.com",
       password: hashedPassword,
     });
 
+    await user.save();
     console.log("✅ User seeded successfully:");
     console.log({
-      email: newUser.email,
+      email: user.email,
       password: "password123",
-      hash: hashedPassword,
+      hash: user.password,
     });
 
     await mongoose.disconnect();
     console.log("✅ Disconnected from MongoDB");
-    process.exit(0);
-  } catch (error: any) {
-    console.error("❌ Error seeding user:", error.message);
-    process.exit(1);
+  } catch (err) {
+    console.error("❌ Error seeding user:", err);
   }
 };
 
