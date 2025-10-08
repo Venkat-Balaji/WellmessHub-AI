@@ -1,64 +1,86 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axios";
 
 interface User {
+  _id: string;
   name: string;
   email: string;
-  token: string;
+  profilePic?: string;
+  settings?: {
+    theme: "light" | "dark";
+    color: string;
+    siteName: string;
+    logoUrl?: string;
+  };
 }
 
 interface AuthContextType {
   user: User | null;
-  isAuthenticated: boolean;
-  login: (userData: User) => void;
-  logout: () => void;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  fetchUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isAuthenticated: false,
-  login: () => {},
-  logout: () => {},
-});
+const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Load user from localStorage (persist session)
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  // ✅ Fetch current user from backend (using cookie)
+  const fetchUser = async () => {
+    try {
+      const res = await API.get("/profile", { withCredentials: true });
+      setUser(res.data);
+    } catch (err) {
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-    navigate("/dashboard");
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    navigate("/login");
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  // ✅ Login function
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      await API.post("/auth/login", { email, password }, { withCredentials: true });
+      await fetchUser();
+      navigate("/dashboard");
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Logout function
+  const logout = async () => {
+    try {
+      await API.post("/auth/logout", {}, { withCredentials: true });
+      setUser(null);
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, logout, fetchUser }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// ✅ Correctly export this hook so you can import it anywhere
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+};

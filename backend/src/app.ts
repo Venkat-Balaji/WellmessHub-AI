@@ -1,29 +1,28 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import connectDB from "./config/db";
+import settingsRoutes from "./routes/settingsRoutes";
+
 import authRoutes from "./routes/authRoutes";
 import profileRoutes from "./routes/profileRoutes";
 
-
 dotenv.config();
-connectDB();
-
 const app = express();
 
-app.use(cors());
-app.use(express.json()); // 👈 REQUIRED to parse JSON body
-app.use(express.urlencoded({ extended: true })); // 👈 handles form data
+app.use(express.json());
+app.use(cookieParser());
 
-app.get("/", (req, res) => {
-  res.send("✅ WellnessHub API is running...");
-});
+// ✅ Enable CORS to allow cookies from frontend
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Frontend URL
+    credentials: true,
+  })
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
-
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
+app.use("/api/settings", settingsRoutes);
 
 export default app;
