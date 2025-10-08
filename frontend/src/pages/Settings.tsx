@@ -167,9 +167,7 @@ const Settings: React.FC = () => {
 
       <div className="flex justify-end">
         <button
-          onClick={() =>
-            alert(`✅ Saved: ${siteName} | ${accent} | ${theme} mode`)
-          }
+          
           className="bg-[var(--accent-color)] hover:opacity-90 text-white font-medium px-6 py-2 rounded-lg shadow transition"
         >
           Save Settings

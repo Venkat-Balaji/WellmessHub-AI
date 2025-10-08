@@ -1,34 +1,27 @@
+import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
-import { Request, Response, NextFunction } from "express";
 
-export const protect = async (req: any, res: Response, next: NextFunction) => {
-  let token;
+interface JwtPayload {
+  id: string;
+}
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
-      console.log("🔐 Verifying token:", token);
-
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-      console.log("✅ Decoded user ID:", decoded.id);
-
-      req.user = await User.findById(decoded.id).select("-password");
-      if (!req.user) {
-        console.error("❌ No user found for token ID:", decoded.id);
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      next();
-    } catch (error) {
-      console.error("❌ JWT verification failed:", error);
-      res.status(401).json({ message: "Not authorized, token failed" });
+export const protect = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.cookies?.token;
+    if (!token) {
+      return res.status(401).json({ message: "Not authorized, no token" });
     }
-  } else {
-    console.error("❌ No authorization header found");
-    res.status(401).json({ message: "Not authorized, no token" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) return res.status(401).json({ message: "User not found" });
+
+    (req as any).user = user;
+    next();
+  } catch (err) {
+    console.error("❌ JWT verification failed:", err);
+    return res.status(401).json({ message: "Not authorized, token failed" });
   }
 };
